@@ -158,23 +158,17 @@ export class VariableInputComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     const el = this.inputRef.nativeElement;
 
-    const keydown$ = fromEvent(el, 'keydown') as Observable<KeyboardEvent>;
-    const keypress$ = fromEvent(el, 'keypress') as Observable<KeyboardEvent>;
-    const keyup$ = fromEvent(el, 'keyup') as Observable<KeyboardEvent>;
-
-    (keydown$.pipe(
-      tap(ev => {
-        this.dispatcher$.next({ type: 'keydown', payload: ev });
-      }),
+    ((fromEvent(el, 'keydown') as Observable<KeyboardEvent>).pipe(
+      tap(ev => this.dispatcher$.next({ type: 'keydown', payload: ev })),
       publishLast(),
     ) as ConnectableObservable<any>).connect();
 
-    (keypress$.pipe(
+    ((fromEvent(el, 'keypress') as Observable<KeyboardEvent>).pipe(
       tap(() => this.dispatcher$.next({ type: 'finishIme' })),
       publishLast(),
     ) as ConnectableObservable<any>).connect();
 
-    (keyup$.pipe(
+    ((fromEvent(el, 'keyup') as Observable<KeyboardEvent>).pipe(
       tap(ev => {
         const { element, offset } = getAnchor();
         return this.dispatcher$.next({
@@ -190,14 +184,8 @@ export class VariableInputComponent implements OnInit, AfterViewInit {
     ) as ConnectableObservable<any>).connect();
 
     this.store$
-      .pipe(
-        filter(state => {
-          const { isRunningIme, shouldReRender } = state;
-          return !isRunningIme && shouldReRender;
-        }),
-      )
-      .subscribe(state => {
-        const { event } = state;
+      .pipe(filter(state => !state.isRunningIme && state.shouldReRender))
+      .subscribe(({ event }) => {
         if (!event) {
           throw new Error();
         }
@@ -206,13 +194,12 @@ export class VariableInputComponent implements OnInit, AfterViewInit {
           throw new Error();
         }
 
-        const { element } = getAnchor();
-        const innerText = target.innerText;
+        const { element: anchorElement } = getAnchor();
 
         const targetIdx = Array.from(target.children).findIndex(
-          v => v === element,
+          v => v === anchorElement,
         );
-        const splited = this.model.reduce(
+        const splitted = this.model.reduce(
           (acc, v, i) => {
             if (i < targetIdx) {
               acc.a = acc.a.concat(v);
@@ -226,19 +213,20 @@ export class VariableInputComponent implements OnInit, AfterViewInit {
           { a: [] as Model[], b: [] as Model[] },
         );
 
+        const innerText = target.innerText;
         if (/%%%.+%%%/.test(innerText)) {
-          const matched = (innerText.match(/%%%(.+?)%%%/) as RegExpMatchArray)[1];
+          const matched = (innerText.match(
+            /%%%(.+?)%%%/,
+          ) as RegExpMatchArray)[1];
 
-          this.model = [
-            ...splited.a,
-            ...element.innerText
-              .split('%%%')
-              .filter(v => !!v)
-              .map(v => {
-                return { text: v, isElement: matched === v };
-              }),
-            ...splited.b,
-          ];
+          const newItems = anchorElement.innerText
+            .split('%%%')
+            .filter(v => !!v)
+            .map(v => {
+              return { text: v, isElement: matched === v };
+            });
+
+          this.model = [...splitted.a, ...newItems, ...splitted.b];
         }
 
         requestAnimationFrame(() => {
