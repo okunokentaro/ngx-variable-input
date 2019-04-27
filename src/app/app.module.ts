@@ -2,15 +2,12 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
+import { VariableInputComponent } from './variable-input/component';
 
 @NgModule({
-  declarations: [
-    AppComponent
-  ],
-  imports: [
-    BrowserModule
-  ],
+  imports: [BrowserModule],
   providers: [],
-  bootstrap: [AppComponent]
+  declarations: [AppComponent, VariableInputComponent],
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}
