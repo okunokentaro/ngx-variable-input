@@ -1,0 +1,10 @@
+<div class="Input" contenteditable="true" #input>
+  <span
+    *ngFor="let v of model"
+    [innerHTML]="v.text"
+    [attr.contenteditable]="!v.isElement"
+    [class.Text-isElement]="v.isElement"
+    class="Text"
+  ></span>
+  <span class="End"></span>
+</div>

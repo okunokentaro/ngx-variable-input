@@ -1,1 +1,10 @@
 <app-variable-input></app-variable-input>
+<app-tag-input
+  [model]="tags"
+  (inputText)="onInputText($event)"
+  (changeTags)="onChangeTags($event)"
+></app-tag-input>
+<app-tag-input
+  [model]="[]"
+  (changeTags)="onChangeTags($event)"
+></app-tag-input>
